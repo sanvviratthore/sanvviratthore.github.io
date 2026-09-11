@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Dollhouse OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Karla:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   DOLLHOUSE OS  ·  tokens
+   ============================================================ */
+:root{
+  --plum:#3B1E35;
+  --plum-soft:#6B4A63;
+  --bubblegum:#FF6FB5;
+  --deep-pink:#E03D86;
+  --periwinkle:#8E9BF5;
+  --mint:#7FE3C4;
+  --butter:#FFE082;
+  --tangerine:#FF9E4A;
+  --milk:#F6F1FA;
+  --plastic:#EDE3F4;
+  --wood:#C08A5A;
+  --wood-dark:#8C5A3C;
+
+  --chrome: "Silkscreen", "Courier New", monospace;
+  --body: "Karla", system-ui, sans-serif;
+
+  --tb-h: 54px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--body);
+  color:var(--plum);
+  background:#2A1526;
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;color:inherit;border:none;background:none;cursor:pointer}
+:focus-visible{outline:3px solid var(--periwinkle);outline-offset:2px}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+#boot{
+  position:fixed;inset:0;z-index:9000;
+  background:
+    radial-gradient(120% 90% at 50% 40%, #4A2440 0%, #241120 70%);
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+}
+#boot.gone{display:none}
+.boot-card{width:min(560px,100%);}
+.boot-brand{
+  font-family:var(--chrome);font-size:clamp(22px,5vw,34px);
+  color:var(--bubblegum);letter-spacing:.02em;line-height:1.3;
+  text-shadow:0 0 22px rgba(255,111,181,.45);
+}
+.boot-sub{
+  font-family:var(--chrome);font-size:11px;color:#B892AE;
+  margin-top:10px;
+}
+.boot-log{
+  margin-top:26px;font-family:var(--chrome);font-size:12px;
+  color:#E8D5E2;line-height:2;min-height:150px;
+}
+.boot-log b{color:var(--mint);font-weight:400}
+.boot-bar{
+  height:14px;border:2px solid #7B5570;background:#2A1526;
+  margin-top:8px;padding:2px;
+}
+.boot-bar i{display:block;height:100%;width:0%;background:var(--bubblegum);transition:width .3s linear}
+.doorbell{
+  margin-top:26px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  opacity:0;pointer-events:none;transition:opacity .4s;
+}
+.doorbell.on{opacity:1;pointer-events:auto}
+.doorbell button{
+  font-family:var(--chrome);font-size:13px;
+  background:var(--bubblegum);color:#fff;
+  padding:14px 22px;border-radius:2px;
+  box-shadow:0 4px 0 var(--deep-pink);
+}
+.doorbell button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--deep-pink)}
+.doorbell span{font-family:var(--chrome);font-size:10px;color:#B892AE}
+
+/* ============================================================
+   DESKTOP
+   ============================================================ */
+#os{position:fixed;inset:0;display:flex;flex-direction:column;opacity:0;transition:opacity .5s}
+#os.on{opacity:1}
+
+#desk{
+  position:relative;flex:1;overflow:hidden;
+  background:
+    radial-gradient(90% 70% at 50% 0%, #F3D9E9 0%, #E3D2F0 55%, #D6C8EC 100%);
+}
+#deskSvgWrap{position:absolute;inset:0;display:grid;place-items:center;padding:14px 14px 4px}
+#deskSvg{width:100%;height:100%;max-width:1180px}
+
+.room-hit{cursor:pointer}
+.room-hit rect.glass{fill:#fff;opacity:0;transition:opacity .18s}
+.room-hit:hover rect.glass,.room-hit:focus-visible rect.glass{opacity:.22}
+.room-hit .tag text{font-family:var(--chrome);font-size:13px;fill:#fff}
+.room-hit .tag rect{fill:var(--plum);transition:fill .18s}
+.room-hit:hover .tag rect,.room-hit:focus-visible .tag rect{fill:var(--deep-pink)}
+
+/* ============================================================
+   WINDOWS
+   ============================================================ */
+.win{
+  position:absolute;z-index:10;
+  width:min(560px,92vw);
+  background:var(--milk);
+  border:2px solid var(--plum);
+  border-radius:4px;
+  box-shadow:8px 8px 0 rgba(59,30,53,.22);
+  display:flex;flex-direction:column;
+  max-height:calc(100% - 24px);
+  animation:pop .18s ease-out;
+}
+@keyframes pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+.win.max{left:8px!important;top:8px!important;width:calc(100% - 16px)!important;height:calc(100% - 16px)!important;max-height:none}
+.win.min{display:none}
+
+.win-bar{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 10px;
+  background:var(--room, var(--bubblegum));
+  border-bottom:2px solid var(--plum);
+  cursor:grab;touch-action:none;user-select:none;
+}
+.win-bar:active{cursor:grabbing}
+.win-bar h2{
+  font-family:var(--chrome);font-size:12px;font-weight:400;
+  color:var(--plum);flex:1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.win-btns{display:flex;gap:5px}
+.win-btns button{
+  width:20px;height:20px;border:2px solid var(--plum);
+  background:var(--milk);border-radius:2px;
+  font-family:var(--chrome);font-size:9px;line-height:1;
+  display:grid;place-items:center;
+}
+.win-btns button:hover{background:#fff}
+.win-btns .x:hover{background:var(--deep-pink);color:#fff}
+
+.win-body{padding:22px;overflow-y:auto;flex:1}
+.win-body::-webkit-scrollbar{width:12px}
+.win-body::-webkit-scrollbar-track{background:var(--plastic)}
+.win-body::-webkit-scrollbar-thumb{background:var(--bubblegum);border:2px solid var(--plum)}
+
+/* ---- window content ---- */
+.w-head{margin-bottom:18px}
+.w-head h3{font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.15}
+.w-head p{font-size:14px;color:var(--plum-soft);margin-top:4px}
+
+.entry{
+  padding:16px 0;
+  border-top:1px dashed #C9B4C4;
+}
+.entry:first-of-type{border-top:none;padding-top:4px}
+.entry h4{font-size:17px;font-weight:700;line-height:1.3}
+.entry .meta{font-family:var(--chrome);font-size:10px;color:var(--plum-soft);margin-top:5px}
+.entry p{font-size:14.5px;line-height:1.6;margin-top:8px;max-width:62ch}
+.entry a.go{
+  display:inline-block;margin-top:10px;
+  font-family:var(--chrome);font-size:10px;
+  color:var(--plum);text-decoration:none;
+  border-bottom:2px solid var(--bubblegum);padding-bottom:2px;
+}
+.entry a.go:hover{background:var(--butter)}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{
+  font-family:var(--chrome);font-size:9px;
+  padding:5px 8px;background:var(--plastic);
+  border:1px solid #C9B4C4;border-radius:2px;
+}
+
+.shelf{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.jar{
+  border:2px solid var(--plum);border-radius:3px;
+  padding:14px;background:#fff;
+}
+.jar .lvl{height:7px;background:var(--plastic);margin-top:9px;border:1px solid var(--plum)}
+.jar .lvl i{display:block;height:100%;background:var(--room,var(--bubblegum))}
+.jar strong{font-size:15px;display:block}
+.jar span{font-family:var(--chrome);font-size:9px;color:var(--plum-soft)}
+
+.note{
+  background:var(--butter);border:2px solid var(--plum);
+  padding:14px 16px;font-size:14px;line-height:1.55;margin-top:16px;
+}
+.note b{font-family:var(--chrome);font-size:10px;display:block;margin-bottom:6px}
+
+.dl{
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:var(--chrome);font-size:12px;
+  background:var(--plum);color:var(--milk);
+  padding:14px 20px;border-radius:2px;text-decoration:none;margin-top:6px;
+}
+.dl:hover{background:var(--deep-pink)}
+
+.cards{display:grid;gap:10px}
+.card-link{
+  display:flex;align-items:center;gap:12px;
+  border:2px solid var(--plum);border-radius:3px;
+  padding:13px 15px;background:#fff;text-decoration:none;color:inherit;
+}
+.card-link:hover{background:var(--butter)}
+.card-link .k{font-family:var(--chrome);font-size:10px;color:var(--plum-soft);display:block}
+.card-link .v{font-size:15px;font-weight:700}
+
+/* terminal */
+.term{background:#241120;color:#F0DCE9;font-family:var(--chrome);font-size:12px;line-height:1.9}
+.term .win-body{padding:16px}
+.term-out{white-space:pre-wrap;word-break:break-word}
+.term-out .ok{color:var(--mint)}
+.term-out .hi{color:var(--bubblegum)}
+.term-row{display:flex;gap:8px;align-items:center;margin-top:10px}
+.term-row span{color:var(--mint)}
+.term-row input{
+  flex:1;background:none;border:none;color:inherit;
+  font-family:var(--chrome);font-size:12px;outline:none;
+}
+
+/* ============================================================
+   TASKBAR
+   ============================================================ */
+#bar{
+  height:var(--tb-h);flex:0 0 auto;
+  background:var(--plum);
+  display:flex;align-items:center;gap:8px;
+  padding:0 10px;
+  border-top:2px solid #1F0F1B;
+  position:relative;z-index:500;
+}
+.bar-btn{
+  font-family:var(--chrome);font-size:11px;color:var(--milk);
+  padding:9px 12px;border-radius:2px;
+  display:flex;align-items:center;gap:8px;
+  white-space:nowrap;
+}
+#rooms-btn{background:var(--bubblegum);color:#fff}
+#rooms-btn:hover{background:var(--deep-pink)}
+#tasks{display:flex;gap:6px;flex:1;overflow-x:auto;scrollbar-width:none}
+#tasks::-webkit-scrollbar{display:none}
+#tasks .bar-btn{background:#54304C}
+#tasks .bar-btn.active{background:#7B5570}
+#clock{font-family:var(--chrome);font-size:11px;color:var(--milk);padding-right:4px;text-align:right}
+#clock small{display:block;font-size:9px;color:#B892AE}
+
+#launcher{
+  position:absolute;bottom:calc(var(--tb-h) + 8px);left:10px;
+  width:min(300px,calc(100vw - 20px));
+  background:var(--milk);border:2px solid var(--plum);
+  box-shadow:8px 8px 0 rgba(59,30,53,.28);
+  z-index:600;display:none;
+}
+#launcher.on{display:block}
+#launcher .lh{
+  font-family:var(--chrome);font-size:10px;
+  padding:10px 12px;background:var(--plum);color:var(--milk);
+}
+#launcher ul{list-style:none;max-height:60vh;overflow-y:auto}
+#launcher li button{
+  width:100%;display:flex;align-items:center;gap:12px;
+  padding:11px 12px;text-align:left;font-size:14px;
+  border-bottom:1px dashed #D9C7D4;
+}
+#launcher li button:hover{background:var(--butter)}
+#launcher li button b{font-weight:700}
+#launcher li button em{
+  font-family:var(--chrome);font-size:9px;font-style:normal;
+  color:var(--plum-soft);display:block;margin-top:2px;
+}
+.sw{width:22px;height:22px;border:2px solid var(--plum);border-radius:2px;flex:0 0 auto}
+
+/* ============================================================
+   DOLL
+   ============================================================ */
+#doll{
+  position:absolute;right:14px;bottom:14px;z-index:400;
+  display:flex;align-items:flex-end;gap:10px;
+  pointer-events:none;
+  transform:translateX(0);
+  transition:transform 8s cubic-bezier(.42,0,.58,1);
+  will-change:transform;
+}
+#dollSprite{
+  width:78px;height:auto;pointer-events:auto;cursor:pointer;
+  filter:drop-shadow(3px 4px 0 rgba(59,30,53,.25));
+}
+#dollSprite .arm-b{display:none}
+#dollSprite .lid{opacity:0;animation:blink 9s steps(1) infinite}
+@keyframes blink{0%,97.6%{opacity:0}98%,98.8%{opacity:1}99.2%,100%{opacity:0}}
+
+/* wardrobe */
+.rack{margin-bottom:20px}
+.rack h4{font-size:15px;font-weight:700;margin-bottom:9px}
+.rack .row{display:flex;flex-wrap:wrap;gap:9px}
+.look{
+  width:56px;padding:7px 4px;border:2px solid var(--plum);border-radius:3px;
+  background:#fff;display:flex;flex-direction:column;align-items:center;gap:5px;
+}
+.look:hover{background:var(--butter)}
+.look[aria-pressed="true"]{background:var(--plum)}
+.look[aria-pressed="true"] em{color:var(--milk)}
+.look .dot{width:26px;height:26px;border:2px solid var(--plum);border-radius:2px}
+.look em{font-family:var(--chrome);font-size:8px;font-style:normal;line-height:1.2;text-align:center}
+
+#bubble{
+  pointer-events:auto;
+  max-width:250px;background:var(--milk);
+  border:2px solid var(--plum);border-radius:3px;
+  padding:11px 14px;font-size:13.5px;line-height:1.5;
+  box-shadow:5px 5px 0 rgba(59,30,53,.22);
+  opacity:0;transform:translateY(6px);transition:opacity .22s,transform .22s;
+}
+#bubble.on{opacity:1;transform:translateY(0)}
+
+@media (max-width:820px){
+  #doll{right:8px;bottom:8px}
+  #dollSprite{width:54px}
+  #bubble{max-width:180px;font-size:12.5px}
+  .win{width:calc(100vw - 16px)!important;left:8px!important;top:8px!important;height:calc(100% - 16px);max-height:none}
+  .win-bar{cursor:default}
+  .win-body{padding:16px}
+  .w-head h3{font-size:22px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001s!important;transition-duration:.001s!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= BOOT ================= -->
+<div id="boot">
+  <div class="boot-card">
+    <div class="boot-brand">DOLLHOUSE OS</div>
+    <div class="boot-sub">v1.0 · a portfolio you can walk around in</div>
+    <div class="boot-log" id="bootLog"></div>
+    <div class="boot-bar"><i id="bootBar"></i></div>
+    <div class="doorbell" id="doorbell">
+      <button id="enterBtn">ring the doorbell</button>
+      <span>or press enter</span>
+    </div>
+  </div>
+</div>
+
+<!-- ================= OS ================= -->
+<div id="os">
+  <div id="desk">
+    <div id="deskSvgWrap"><svg id="deskSvg" viewBox="0 0 1000 660" role="img" aria-label="A dollhouse floor plan. Each room opens a section of the portfolio."></svg></div>
+
+    <div id="doll">
+      <div id="bubble"></div>
+      <svg id="dollSprite" viewBox="0 0 14 20" shape-rendering="crispEdges" role="button" tabindex="0" aria-label="Talk to the resident"></svg>
+    </div>
+  </div>
+
+  <div id="launcher">
+    <div class="lh">rooms in this house</div>
+    <ul id="launchList"></ul>
+  </div>
+
+  <div id="bar">
+    <button class="bar-btn" id="rooms-btn" aria-haspopup="true" aria-expanded="false">▤ rooms</button>
+    <div id="tasks"></div>
+    <div id="clock"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   1. YOUR CONTENT  —  everything below is placeholder.
+      Replace the strings and the whole site updates.
+   ============================================================ */
+/* ============================================================
+   1. YOUR CONTENT
+   ============================================================ */
+const ME = {
+  name: "Sanvi",
+  tagline: "Backend developer · Java, Spring Boot, FastAPI, AI pipelines",
+};
+
+const ROOMS = [
+  {
+    id:"living", name:"Living room", app:"About me", color:"#FF6FB5",
+    line:"Come in! Backend's my thing — let me show you around.",
+    render: () => `
+      <div class="w-head">
+        <h3>Hi, I'm Sanvi Rathore</h3>
+        <p>${ME.tagline}</p>
+      </div>
+      <div class="entry">
+        <p>I build backends — REST APIs with real auth, role-based access and audit
+        trails, and lately document-intelligence pipelines with local LLMs. Most of my
+        work is Java and Spring Boot, or Python and FastAPI.</p>
+        <p>Right now I'm interning at NAVCO, where I built a system that pulled 62,885
+        FDA PDFs and indexed 1.1 million chunks into a local RAG engine. I'm in my final
+        stretch at IGDTUW and looking for backend roles.</p>
+      </div>
+      <div class="note">
+        <b>how to use this house</b>
+        Every room is a section. Click a room, or use the rooms menu in the taskbar.
+        There's a working terminal parked in the garage.
+      </div>`
+  },
+  {
+    id:"kitchen", name:"Kitchen", app:"Projects", color:"#FF9E4A",
+    line:"This is what I've been cooking up.",
+    render: () => PROJECTS.map(p => `
+      <div class="entry">
+        <h4>${p.title}</h4>
+        <div class="meta">${p.year} · ${p.role}</div>
+        <p>${p.desc}</p>
+        <div class="chips">${p.stack.map(s=>`<span class="chip">${s}</span>`).join("")}</div>
+        ${p.link ? `<a class="go" href="${p.link}" target="_blank" rel="noopener">view on github</a>` : ""}
+      </div>`).join("")
+  },
+  {
+    id:"library", name:"Library", app:"Education", color:"#8E9BF5",
+    line:"Pull a book off the shelf — that's my education.",
+    render: () => EDUCATION.map(e => `
+      <div class="entry">
+        <h4>${e.title}</h4>
+        <div class="meta">${e.place} · ${e.years}</div>
+        <p>${e.note}</p>
+      </div>`).join("")
+  },
+  {
+    id:"closet", name:"Closet", app:"Experience", color:"#7FE3C4",
+    line:"Every outfit in here is a role I've held.",
+    render: () => EXPERIENCE.map(x => `
+      <div class="entry">
+        <h4>${x.role}</h4>
+        <div class="meta">${x.company} · ${x.years}</div>
+        <p>${x.desc}</p>
+      </div>`).join("")
+  },
+  {
+    id:"cupboard", name:"Cupboard", app:"Achievements", color:"#FFE082",
+    line:"The shiny things live on this shelf.",
+    render: () => AWARDS.map(a => `
+      <div class="entry">
+        <h4>${a.title}</h4>
+        <div class="meta">${a.where} · ${a.year}</div>
+        <p>${a.desc}</p>
+      </div>`).join("")
+  },
+  {
+    id:"vanity", name:"Vanity", app:"Skills", color:"#E03D86",
+    line:"My kit. These are the tools I reach for.",
+    render: () => `
+      <div class="w-head">
+        <h3>What's in the kit</h3>
+        <p>Grouped by what I use it for.</p>
+      </div>` +
+      SKILLS.map(g => `
+      <div class="entry">
+        <h4>${g.group}</h4>
+        <div class="chips">${g.items.map(i=>`<span class="chip">${i}</span>`).join("")}</div>
+      </div>`).join("")
+  },
+  {
+    id:"garage", name:"Garage", app:"Resume", color:"#C08A5A",
+    line:"Hold up, let me pop the trunk and grab my resume.",
+    render: () => `
+      <div class="w-head">
+        <h3>Take a copy with you</h3>
+        <p>One page, kept current.</p>
+      </div>
+      <a class="dl" href="${RESUME_URL}" download>⬇ download resume (PDF)</a>
+      <div class="note">
+        <b>also parked in here</b>
+        There's a terminal in this garage. Type <code>help</code> to see what it does.
+      </div>
+      <p style="margin-top:14px"><button class="dl" id="openTerm">▶ open terminal</button></p>`
+  },
+  {
+    id:"phone", name:"Front hall", app:"Contact", color:"#7FE3C4",
+    line:"Ring ring — let's talk.",
+    render: () => `
+      <div class="w-head">
+        <h3>Say hello</h3>
+        <p>Happy to talk about backend roles, internships, or anything I've built.</p>
+      </div>
+      <div class="cards">${CONTACT.map(c=>`
+        <a class="card-link" href="${c.link}" target="_blank" rel="noopener">
+          <span>
+            <span class="k">${c.label}</span>
+            <span class="v">${c.value}</span>
+          </span>
+        </a>`).join("")}
+      </div>`
+  },
+];
+
+const PROJECTS = [
+  { title:"Smart Expense Tracker", year:"Jul 2026", role:"solo build",
+    desc:"A stateless Spring Boot REST API across 32 classes in a Controller–Service–Repository structure, with 10+ endpoints for auth, expenses, analytics and savings. JWT with BCrypt-hashed credentials and per-user data isolation, three analytics modules, an 80%-threshold savings recommender, and a JPA/Hibernate layer over H2 — all containerised with Docker.",
+    stack:["Java","Spring Boot","JPA","JWT","Docker"],
+    link:"https://github.com/sanvviratthore/SmartExpenseTracker" },
+
+  { title:"Finance Dashboard API", year:"Mar – Apr 2026", role:"solo build",
+    desc:"A secure REST API with JWT auth, revocable refresh tokens and three-level RBAC (admin, analyst, viewer) enforced at the API layer. Pydantic v2 validation, optimistic locking and a full audit trail on every financial record, plus a per-IP sliding-window rate limiter and dashboard analytics for totals, trends and category breakdowns.",
+    stack:["FastAPI","PostgreSQL","JWT","Pydantic"],
+    link:"https://github.com/sanvviratthore/task-manager-api" },
+
+  { title:"Chatly — real-time group chat", year:"Mar 2026", role:"solo build",
+    desc:"Real-time chat over FastAPI WebSockets: three rooms with live presence tracking, the last 50 messages persisted to SQLite, and auto-reconnect with exponential backoff. I wrote a feature spec before building and a post-ship reflection after, with XSS-safe rendering throughout.",
+    stack:["FastAPI","WebSockets","SQLite"],
+    link:"https://github.com/sanvviratthore/chat-app" },
+
+  { title:"Career Coach", year:"May – Jun 2025", role:"solo build",
+    desc:"A web app that helps students and professionals navigate their careers through resume analysis and personalised guidance, built on Streamlit and Microsoft Azure.",
+    stack:["Python","Streamlit","Azure"], link:"" },
+
+  { title:"Taskr — responsive task manager", year:"Mar 2026", role:"solo build",
+    desc:"A clean, accessible single-page task manager written in plain HTML, CSS and JavaScript — no framework, no build step.",
+    stack:["HTML","CSS","JavaScript"],
+    link:"https://github.com/sanvviratthore/task-manager" },
+];
+
+const EDUCATION = [
+  { title:"B.Tech, Mechanical and Automation Engineering",
+    place:"Indira Gandhi Delhi Technical University for Women", years:"Aug 2023 – Jun 2027",
+    note:"CGPA 8.65. Coursework in data structures and algorithms, OOP, DBMS and operating systems. Community Manager for Celestial Biscuit." },
+  { title:"Higher secondary, PCM with Computer Science",
+    place:"Mother's Global School", years:"Completed Jun 2022",
+    note:"President of the Editorial Board; also active in the Eco and Science clubs." },
+];
+
+const EXPERIENCE = [
+  { role:"Software Development Intern", company:"NAVCO Industries Pvt. Ltd. · Remote", years:"Apr 2026 – present",
+    desc:"Engineered a two-phase FDA 510(k) document intelligence system: a parallelised, resumable pipeline that downloaded 62,885 summary PDFs across 175,013 records, then a local RAG engine indexing 1.1M chunks into ChromaDB with LLM draft generation — 100% structural fidelity and zero hallucinated citations." },
+
+  { role:"Mentor", company:"AnitaB.org & WomenTech Network", years:"Jul 2024 – May 2026",
+    desc:"Mentored three women in tech on personalised learning plans, focused on technical skills, confidence and career readiness." },
+
+  { role:"Content Writer Intern", company:"SalesEra", years:"May – Aug 2025",
+    desc:"Wrote and edited marketing content over a four-month internship." },
+
+  { role:"Event Coordinator", company:"Taarangana, IGDTUW", years:"Oct 2023 – Mar 2024",
+    desc:"Ran logistics, scheduling and on-ground execution for Taarangana 2024, the university's annual cultural festival." },
+
+  { role:"Volunteer", company:"Training and Placement Cell, IGDTUW", years:"Oct 2023 – Jan 2025",
+    desc:"Coordinated placement activities, liaised between students and recruiters, and organised resume-building and interview prep sessions." },
+];
+
+const AWARDS = [
+  { title:"Rank 96, College category", where:"ICPC Algo Queen — The Girls' Programming Cup", year:"2026",
+    desc:"Hosted by Amrita Vishwa Vidyapeetham and endorsed by the ICPC Foundation. The previous edition drew 5,000+ participants from 55 countries." },
+  { title:"National Finalist", where:"DecodeX, NLD Synapse — N.L. Dalmia Institute", year:"2026",
+    desc:"Reached the national finals of the competition." },
+  { title:"Top 93 of 11,500+ teams", where:"Asian Paints Alchemy Challenge", year:"2026",
+    desc:"The sole qualifier from my college." },
+  { title:"97.32 percentile — top 3% nationally", where:"Young Turks Aptitude Test", year:"2025",
+    desc:"National aptitude assessment." },
+  { title:"Advancing Inclusion Scholar", where:"GHC India, AnitaB.org", year:"2024",
+    desc:"Selected as a Grace Hopper Celebration India scholar." },
+  { title:"Millennium Fellow — top 4% of 60,000+ applicants", where:"UN Academic Impact & MCN", year:"2024",
+    desc:"Selected for the global cohort." },
+  { title:"Top Performer, App Development", where:"MSC IGDTUW Summer Bootcamp", year:"2024",
+    desc:"Best mentee of fifteen." },
+];
+
+const SKILLS = [
+  { group:"Languages", items:["Java","Python","SQL"] },
+  { group:"Backend", items:["Spring Boot","FastAPI","REST APIs","WebSockets","JWT auth"] },
+  { group:"Databases", items:["PostgreSQL","SQLite","H2","ChromaDB"] },
+  { group:"AI & data", items:["LangChain","Ollama","sentence-transformers","PyMuPDF","RAG pipelines"] },
+  { group:"Core CS", items:["Data structures & algorithms","OOP","DBMS","Operating systems"] },
+  { group:"Tools", items:["Docker","Maven","Git & GitHub","Streamlit"] },
+];
+
+const CONTACT = [
+  { label:"email", value:"sanviirathoree@gmail.com", link:"mailto:sanviirathoree@gmail.com" },
+  { label:"github", value:"@sanvviratthore", link:"https://github.com/sanvviratthore" },
+  { label:"linkedin", value:"/in/sanvi-rathore", link:"https://www.linkedin.com/in/sanvi-rathore-75611a289" },
+];
+
+const RESUME_URL = "Sanvi_Rathore_Resume.pdf";
+
+/* ============================================================
+   2. THE HOUSE  (drawn in SVG, 3x3 grid of rooms)
+   ============================================================ */
+/* furniture is drawn in a fixed 276 x 151 design box, then scaled to fit
+   whatever cell size the current layout uses */
+const FURN_W = 276, FURN_H = 151;
+
+function layout(){
+  return window.innerWidth < 780
+    ? { cols:2, rows:4, w:300, h:186, mx:22, stairs:false }
+    : { cols:3, rows:3, w:290, h:165, mx:70, stairs:true };
+}
+
+function cell(L, i){
+  const c = i % L.cols, r = Math.floor(i / L.cols);
+  return { x: L.mx + c*L.w, y: 120 + r*L.h };
+}
+
+/* which grid cells the rooms occupy (desktop leaves cell 4 for the stairs) */
+function roomCells(L){
+  return L.stairs ? [0,1,2,3,5,6,7,8] : [0,1,2,3,4,5,6,7];
+}
+
+/* furniture drawn in a local 290 x 165 box */
+const FURNITURE = {
+  living:`
+    <rect x="60" y="95" width="130" height="34" rx="8" fill="#E85C9E"/>
+    <rect x="60" y="70" width="130" height="30" rx="8" fill="#FF88C2"/>
+    <rect x="52" y="76" width="16" height="50" rx="6" fill="#E85C9E"/>
+    <rect x="182" y="76" width="16" height="50" rx="6" fill="#E85C9E"/>
+    <ellipse cx="125" cy="140" rx="72" ry="9" fill="#F2C6DE"/>
+    <rect x="212" y="60" width="42" height="70" rx="4" fill="#fff" stroke="#8C5A3C" stroke-width="3"/>
+    <path d="M218 96 l14 -16 l12 14 l10 -10 v40 h-36z" fill="#BFD8F5"/>`,
+  kitchen:`
+    <rect x="46" y="84" width="112" height="52" rx="4" fill="#FFF3E4" stroke="#8C5A3C" stroke-width="3"/>
+    <rect x="46" y="78" width="112" height="10" rx="3" fill="#9A8F98"/>
+    <circle cx="72" cy="100" r="8" fill="#C9C2CB"/><circle cx="96" cy="100" r="8" fill="#C9C2CB"/>
+    <rect x="176" y="52" width="62" height="84" rx="6" fill="#F4F7FA" stroke="#8C5A3C" stroke-width="3"/>
+    <line x1="176" y1="88" x2="238" y2="88" stroke="#8C5A3C" stroke-width="3"/>
+    <rect x="228" y="62" width="5" height="18" rx="2" fill="#9A8F98"/>
+    <rect x="228" y="96" width="5" height="18" rx="2" fill="#9A8F98"/>
+    <path d="M60 64 q10 -14 20 0" stroke="#D9CBD4" stroke-width="4" fill="none" opacity=".8"/>
+    <rect x="60" y="62" width="30" height="18" rx="4" fill="#FF9E4A"/>`,
+  library:`
+    <rect x="46" y="34" width="150" height="102" rx="4" fill="#8C5A3C"/>
+    ${[0,1,2].map(r=>`<rect x="50" y="${40+r*33}" width="142" height="27" fill="#C08A5A"/>` +
+      [0,1,2,3,4,5,6,7].map(b=>`<rect x="${54+b*17}" y="${42+r*33}" width="${b%3?11:13}" height="${23-(b%2)*4}" rx="2" fill="${["#E03D86","#8E9BF5","#7FE3C4","#FFE082","#FF9E4A","#FF6FB5"][(b+r)%6]}"/>`).join("")).join("")}
+    <rect x="214" y="92" width="44" height="8" rx="3" fill="#8C5A3C"/>
+    <rect x="216" y="70" width="40" height="24" rx="3" fill="#FFF3E4" stroke="#8C5A3C" stroke-width="2"/>
+    <line x1="236" y1="70" x2="236" y2="94" stroke="#8C5A3C" stroke-width="2"/>`,
+  closet:`
+    <line x1="46" y1="48" x2="248" y2="48" stroke="#B9B2BC" stroke-width="5"/>
+    ${["#E03D86","#8E9BF5","#7FE3C4","#FFE082","#FF9E4A"].map((c,i)=>`
+      <path d="M${62+i*40} 56 l14 0 l12 62 h-38z" fill="${c}"/>
+      <path d="M${69+i*40} 56 a7 7 0 1 1 0 -8" fill="none" stroke="#B9B2BC" stroke-width="3"/>`).join("")}
+    <rect x="196" y="104" width="52" height="34" rx="5" fill="#FF6FB5" stroke="#8C5A3C" stroke-width="3"/>
+    <rect x="214" y="104" width="16" height="34" fill="#FFE082"/>`,
+  cupboard:`
+    <rect x="52" y="38" width="186" height="100" rx="5" fill="#FFF3E4" stroke="#8C5A3C" stroke-width="3"/>
+    <line x1="52" y1="88" x2="238" y2="88" stroke="#8C5A3C" stroke-width="3"/>
+    ${[0,1].map(r=>[0,1,2].map(i=>`
+        <path d="M${84+i*52} ${58+r*50} h22 l-4 14 h-14z" fill="#E8B93C"/>
+        <rect x="${92+i*52}" y="${72+r*50}" width="6" height="8" fill="#E8B93C"/>
+        <rect x="${86+i*52}" y="${80+r*50}" width="18" height="5" rx="2" fill="#8C5A3C"/>
+      `).join("")).join("")}`,
+  vanity:`
+    <rect x="86" y="88" width="118" height="9" rx="3" fill="#F0DCC8"/>
+    <rect x="90" y="97" width="9" height="42" fill="#E6CDB4"/>
+    <rect x="191" y="97" width="9" height="42" fill="#E6CDB4"/>
+    <circle cx="145" cy="52" r="34" fill="none" stroke="#E8C35A" stroke-width="7"/>
+    <circle cx="145" cy="52" r="29" fill="#E4EDF4"/>
+    ${[0,1,2,3,4,5,6,7].map(i=>`<circle cx="${145+Math.round(44*Math.cos(i*Math.PI/4))}" cy="${52+Math.round(44*Math.sin(i*Math.PI/4))}" r="5" fill="#FFF6D8"/>`).join("")}
+    <rect x="102" y="76" width="9" height="14" rx="3" fill="#E03D86"/>
+    <rect x="116" y="79" width="9" height="11" rx="3" fill="#FF9E4A"/>
+    <rect x="176" y="77" width="9" height="13" rx="3" fill="#8E9BF5"/>`,
+  garage:`
+    <rect x="46" y="40" width="200" height="30" rx="4" fill="#D6CBD8"/>
+    ${[0,1,2].map(i=>`<line x1="46" y1="${48+i*8}" x2="246" y2="${48+i*8}" stroke="#B9B2BC" stroke-width="3"/>`).join("")}
+    <rect x="66" y="96" width="150" height="26" rx="10" fill="#E8447F"/>
+    <path d="M96 96 q18 -26 46 -26 q30 0 40 26z" fill="#F5F7FA"/>
+    <circle cx="98" cy="124" r="13" fill="#2A2530"/><circle cx="98" cy="124" r="5" fill="#C9C2CB"/>
+    <circle cx="188" cy="124" r="13" fill="#2A2530"/><circle cx="188" cy="124" r="5" fill="#C9C2CB"/>
+    <rect x="212" y="100" width="10" height="12" rx="3" fill="#FFF3C2"/>`,
+  phone:`
+    <rect x="94" y="86" width="100" height="9" rx="3" fill="#C08A5A"/>
+    <rect x="100" y="95" width="7" height="44" fill="#8C5A3C"/>
+    <rect x="181" y="95" width="7" height="44" fill="#8C5A3C"/>
+    <rect x="120" y="62" width="48" height="24" rx="6" fill="#E03D86"/>
+    <rect x="116" y="52" width="56" height="12" rx="6" fill="#FF6FB5"/>
+    <path d="M172 74 q22 6 18 30" stroke="#E03D86" stroke-width="4" fill="none"/>
+    <rect x="210" y="58" width="36" height="46" rx="3" fill="#FFF3E4" stroke="#8C5A3C" stroke-width="3"/>
+    <path d="M210 58 l18 16 l18 -16" fill="none" stroke="#8C5A3C" stroke-width="3"/>`,
+};
+
+const WALLPAPER = {
+  living:"#FFE3F0", kitchen:"#FFEBD6", library:"#E4E4FB",
+  closet:"#DCF7EE", cupboard:"#FFF6DA", vanity:"#FCDDEB",
+  garage:"#E6E2E9", phone:"#DFF6EF"
+};
+
+function drawHouse(){
+  const svg = document.getElementById("deskSvg");
+  const L = layout();
+  const W = L.w*L.cols, H = L.h*L.rows;
+  const cx = L.mx + W/2;
+  const viewW = W + L.mx*2;
+  const viewH = 120 + H + 60;
+  svg.setAttribute("viewBox", `0 0 ${viewW} ${viewH}`);
+
+  const roofPeak = 120 - Math.min(96, W*0.16);
+  const eave = Math.min(38, L.mx*0.55);
+  let s = "";
+
+  s += `<ellipse cx="${cx}" cy="${120+H+34}" rx="${W/2+eave}" ry="15" fill="#000" opacity=".10"/>`;
+  s += `<path d="M${L.mx-eave} 120 L${cx} ${roofPeak} L${L.mx+W+eave} 120 Z" fill="#B5493F"/>`;
+  s += `<path d="M${L.mx-eave} 120 L${cx} ${roofPeak} L${L.mx+W+eave} 120 Z" fill="none" stroke="#8E3A32" stroke-width="4"/>`;
+  s += `<rect x="${L.mx+W-72}" y="${roofPeak+22}" width="28" height="${96-roofPeak/2}" rx="3" fill="#9C4238"/>`;
+  s += `<rect x="${L.mx+W-78}" y="${roofPeak+16}" width="40" height="12" rx="3" fill="#8E3A32"/>`;
+  s += `<rect x="${L.mx-14}" y="120" width="${W+28}" height="${H+16}" rx="6" fill="#8C5A3C"/>`;
+
+  const cells = roomCells(L);
+  ROOMS.forEach((room, idx)=>{
+    const {x,y} = cell(L, cells[idx]);
+    const iw = L.w-14, ih = L.h-14;
+    const k = Math.min(iw/FURN_W, ih/FURN_H);
+    const fx = x+7 + (iw - FURN_W*k)/2, fy = y+7 + (ih - FURN_H*k)/2;
+    const tagW = room.app.length*8 + 20;
+
+    s += `<g class="room-hit" data-room="${room.id}" tabindex="0" role="button" aria-label="Open ${room.app}">
+      <rect x="${x+7}" y="${y+7}" width="${iw}" height="${ih}" fill="${WALLPAPER[room.id]}"/>
+      <rect x="${x+7}" y="${y+ih-9}" width="${iw}" height="16" fill="#C08A5A"/>
+      <g transform="translate(${fx} ${fy}) scale(${k})">${FURNITURE[room.id]||""}</g>
+      <rect class="glass" x="${x+7}" y="${y+7}" width="${iw}" height="${ih}"/>
+      <rect x="${x+7}" y="${y+7}" width="${iw}" height="${ih}" fill="none" stroke="#8C5A3C" stroke-width="7"/>
+      <g class="tag" transform="translate(${x+16} ${y+ih-30})">
+        <rect x="0" y="0" width="${tagW}" height="24" rx="3"/>
+        <text x="10" y="16">${room.app.toLowerCase()}</text>
+      </g>
+    </g>`;
+  });
+
+  if(L.stairs){
+    const st = cell(L, 4), iw = L.w-14, ih = L.h-14;
+    s += `<g><rect x="${st.x+7}" y="${st.y+7}" width="${iw}" height="${ih}" fill="#F0E4D6"/>`;
+    for(let i=0;i<7;i++){
+      s += `<rect x="${st.x+22+i*34}" y="${st.y+L.h-30-i*17}" width="36" height="9" fill="#C08A5A"/>
+            <rect x="${st.x+22+i*34}" y="${st.y+L.h-21-i*17}" width="9" height="17" fill="#A6754C"/>`;
+    }
+    s += `<rect x="${st.x+7}" y="${st.y+7}" width="${iw}" height="${ih}" fill="none" stroke="#8C5A3C" stroke-width="7"/></g>`;
+  }
+
+  svg.innerHTML = s;
+
+  svg.querySelectorAll(".room-hit").forEach(g=>{
+    g.addEventListener("click", ()=> openRoom(g.dataset.room));
+    g.addEventListener("keydown", e=>{
+      if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openRoom(g.dataset.room); }
+    });
+  });
+}
+
+let resizeT, lastCols = null;
+window.addEventListener("resize", ()=>{
+  clearTimeout(resizeT);
+  resizeT = setTimeout(()=>{
+    const c = layout().cols;
+    if(c !== lastCols){ lastCols = c; drawHouse(); }
+  }, 160);
+});
+
+/* ============================================================
+   3. PIXEL DOLL
+   ============================================================ */
+const OUTFITS = [
+  { id:"bubblegum", name:"pink",   dress:"#FF6FB5", shoes:"#8E9BF5", bow:"#FF3D8B" },
+  { id:"mint",      name:"mint",   dress:"#5FD9B8", shoes:"#FF9E4A", bow:"#2FB894" },
+  { id:"peri",      name:"blue",   dress:"#8E9BF5", shoes:"#FFE082", bow:"#5C6BE0" },
+  { id:"butter",    name:"yellow", dress:"#FFD34E", shoes:"#E03D86", bow:"#E8A800" },
+  { id:"night",     name:"night",  dress:"#4A3A63", shoes:"#C9C2CB", bow:"#8E9BF5" },
+  { id:"hoodie",    name:"hoodie", dress:"#B9B2BC", shoes:"#3B1E35", bow:"#7FE3C4" },
+];
+const HAIRS = [
+  { id:"brown",  name:"brown",  hair:"#6B4530" },
+  { id:"black",  name:"black",  hair:"#2E2430" },
+  { id:"auburn", name:"auburn", hair:"#9C4238" },
+  { id:"blonde", name:"blonde", hair:"#E0B45C" },
+  { id:"candy",  name:"pink",   hair:"#E86FA8" },
+];
+
+const LOOK = { outfit:"bubblegum", hair:"brown" };
+function saveLook(){ try{ localStorage.setItem("dollhouse-look", JSON.stringify(LOOK)); }catch(e){} }
+function loadLook(){
+  try{
+    const v = JSON.parse(localStorage.getItem("dollhouse-look"));
+    if(v && v.outfit && v.hair) Object.assign(LOOK, v);
+  }catch(e){}
+}
+
+function palette(){
+  const o = OUTFITS.find(o=>o.id===LOOK.outfit) || OUTFITS[0];
+  const h = HAIRS.find(h=>h.id===LOOK.hair) || HAIRS[0];
+  return { ".":null, H:h.hair, S:"#F6C9A8", E:"#3B1E35",
+           D:o.dress, B:o.bow, O:o.shoes, K:"#FFA8C4", M:"#C9506E" };
+}
+
+const DOLL_ROWS = [
+  "....HHHHHH....",
+  "..HHHHHHHHHH..",
+  ".HHHHHHHHHHHH.",
+  ".HHSSSSSSSSHHB",
+  ".HHSSSSSSSSHHB",
+  ".HHSESSSSESHH.",
+  ".HHSSSSSSSSHH.",
+  ".HKSSSMMSSSKH.",
+  "..HSSSSSSSSH..",
+  "....SSSSSS....",
+  "...DDDDDDDD...",
+  "...DDDDDDDD...",
+  "..DDDDDDDDDD..",
+  "..DDDDDDDDDD..",
+  ".DDDDDDDDDDDD.",
+  ".DDDDDDDDDDDD.",
+  "....SS..SS....",
+  "....SS..SS....",
+  "....SS..SS....",
+  "...OOO..OOO...",
+];
+
+function drawDoll(){
+  const PX = palette();
+  let s = "";
+  DOLL_ROWS.forEach((row,y)=>{
+    [...row].forEach((ch,x)=>{
+      const c = PX[ch];
+      if(c) s += `<rect x="${x}" y="${y}" width="1" height="1" fill="${c}"/>`;
+    });
+  });
+  s += `<g class="arm-a">
+      <rect x="2" y="11" width="1" height="3" fill="#F6C9A8"/>
+      <rect x="11" y="11" width="1" height="3" fill="#F6C9A8"/>
+    </g>`;
+  s += `<g class="arm-b">
+      <rect x="2" y="11" width="1" height="3" fill="#F6C9A8"/>
+      <rect x="11" y="10" width="1" height="1" fill="#F6C9A8"/>
+      <rect x="12" y="9" width="1" height="2" fill="#F6C9A8"/>
+    </g>`;
+  s += `<g class="lid">
+      <rect x="4" y="5" width="1" height="1" fill="#F6C9A8"/>
+      <rect x="9" y="5" width="1" height="1" fill="#F6C9A8"/>
+    </g>`;
+  document.getElementById("dollSprite").innerHTML = s;
+}
+
+function wardrobeHTML(){
+  const sw = (arr, kind, key) => arr.map(o=>`
+    <button class="look" data-kind="${kind}" data-id="${o.id}"
+            aria-pressed="${LOOK[kind]===o.id}" title="${o.name}">
+      <span class="dot" style="background:${o[key]}"></span>
+      <em>${o.name}</em>
+    </button>`).join("");
+  return `
+    <div class="w-head">
+      <h3>Wardrobe</h3>
+      <p>Pick something for me to wear. I'll remember it next time.</p>
+    </div>
+    <div class="rack"><h4>Outfit</h4><div class="row">${sw(OUTFITS,"outfit","dress")}</div></div>
+    <div class="rack"><h4>Hair</h4><div class="row">${sw(HAIRS,"hair","hair")}</div></div>`;
+}
+
+function openWardrobe(){
+  if(open.has("wardrobe")){ focusWin("wardrobe"); return; }
+  const w = buildWin("wardrobe","wardrobe","#E03D86", wardrobeHTML(), "");
+  wireWardrobe(w);
+  say("Ooh, dress-up time. Pick something cute.");
+}
+
+function wireWardrobe(w){
+  w.querySelectorAll(".look").forEach(btn=>{
+    btn.onclick = ()=>{
+      LOOK[btn.dataset.kind] = btn.dataset.id;
+      saveLook();
+      drawDoll();
+      w.querySelectorAll(`.look[data-kind="${btn.dataset.kind}"]`)
+        .forEach(b=> b.setAttribute("aria-pressed", b===btn));
+    };
+  });
+}
+
+const IDLE_LINES = [
+  "The kitchen's where the real work is.",
+  "There's a terminal in the garage, by the way.",
+  "Try dragging a window around.",
+  "Ask me about the FDA pipeline. 62,885 PDFs.",
+  "You can have several rooms open at once.",
+  "Type 'projects' in the terminal for the short version.",
+];
+
+let bubbleTimer;
+function say(text, hold=4600){
+  const b = document.getElementById("bubble");
+  b.textContent = text;
+  b.classList.add("on");
+  clearTimeout(bubbleTimer);
+  bubbleTimer = setTimeout(()=> b.classList.remove("on"), hold);
+}
+
+/* ============================================================
+   4. WINDOW MANAGER
+   ============================================================ */
+let z = 20;
+const open = new Map();
+
+function openRoom(id){
+  const room = ROOMS.find(r=>r.id===id);
+  if(!room) return;
+  say(room.line);
+  if(open.has(id)){ focusWin(id); return; }
+  buildWin(id, room.app, room.color, room.render(), room.name);
+}
+
+function buildWin(id, title, color, html, subtitle){
+  const w = document.createElement("div");
+  w.className = "win";
+  w.style.setProperty("--room", color);
+  w.style.zIndex = ++z;
+
+  const n = open.size;
+  const maxX = Math.max(10, window.innerWidth - 580);
+  const maxY = Math.max(10, window.innerHeight - 460);
+  w.style.left = Math.min(40 + n*32, maxX) + "px";
+  w.style.top  = Math.min(30 + n*28, maxY) + "px";
+
+  w.innerHTML = `
+    <div class="win-bar">
+      <h2>${title.toLowerCase()} ${subtitle?`— ${subtitle.toLowerCase()}`:""}</h2>
+      <div class="win-btns">
+        <button class="mn" title="Minimise" aria-label="Minimise">_</button>
+        <button class="mx" title="Maximise" aria-label="Maximise">□</button>
+        <button class="x"  title="Close"    aria-label="Close">✕</button>
+      </div>
+    </div>
+    <div class="win-body">${html}</div>`;
+
+  document.getElementById("desk").appendChild(w);
+  open.set(id, w);
+
+  w.addEventListener("pointerdown", ()=> focusWin(id));
+  w.querySelector(".x").onclick  = e => { e.stopPropagation(); closeWin(id); };
+  w.querySelector(".mn").onclick = e => { e.stopPropagation(); w.classList.add("min"); syncTasks(); };
+  w.querySelector(".mx").onclick = e => { e.stopPropagation(); w.classList.toggle("max"); };
+  makeDraggable(w, w.querySelector(".win-bar"));
+
+  const term = w.querySelector("#openTerm");
+  if(term) term.onclick = openTerminal;
+
+  syncTasks();
+  return w;
+}
+
+function closeWin(id){
+  const w = open.get(id);
+  if(!w) return;
+  w.remove(); open.delete(id); syncTasks();
+}
+function focusWin(id){
+  const w = open.get(id);
+  if(!w) return;
+  w.classList.remove("min");
+  w.style.zIndex = ++z;
+  syncTasks();
+}
+
+function makeDraggable(win, handle){
+  let sx=0, sy=0, ox=0, oy=0, dragging=false;
+  handle.addEventListener("pointerdown", e=>{
+    if(e.target.closest(".win-btns")) return;
+    if(window.innerWidth < 820) return;
+    dragging = true;
+    sx=e.clientX; sy=e.clientY;
+    ox=win.offsetLeft; oy=win.offsetTop;
+    handle.setPointerCapture(e.pointerId);
+  });
+  handle.addEventListener("pointermove", e=>{
+    if(!dragging) return;
+    const deck = document.getElementById("desk").getBoundingClientRect();
+    let nx = ox + (e.clientX-sx), ny = oy + (e.clientY-sy);
+    nx = Math.max(-win.offsetWidth+120, Math.min(nx, deck.width-120));
+    ny = Math.max(0, Math.min(ny, deck.height-44));
+    win.style.left = nx+"px"; win.style.top = ny+"px";
+  });
+  const stop = e => { dragging=false; try{handle.releasePointerCapture(e.pointerId)}catch(_){} };
+  handle.addEventListener("pointerup", stop);
+  handle.addEventListener("pointercancel", stop);
+}
+
+function syncTasks(){
+  const bar = document.getElementById("tasks");
+  bar.innerHTML = "";
+  open.forEach((w,id)=>{
+    const room = ROOMS.find(r=>r.id===id);
+    const label = room ? room.app.toLowerCase() : id;
+    const b = document.createElement("button");
+    b.className = "bar-btn" + (w.classList.contains("min") ? "" : " active");
+    b.textContent = label;
+    b.onclick = ()=>{
+      if(w.classList.contains("min")) focusWin(id);
+      else if(w.style.zIndex == z) w.classList.add("min");
+      else focusWin(id);
+      syncTasks();
+    };
+    bar.appendChild(b);
+  });
+}
+
+/* ============================================================
+   5. TERMINAL
+   ============================================================ */
+function openTerminal(){
+  if(open.has("term")){ focusWin("term"); return; }
+  const w = buildWin("term","terminal","#3B1E35",
+    `<div class="term-out" id="termOut"></div>
+     <div class="term-row"><span>${ME.name.toLowerCase()}@dollhouse:~$</span>
+     <input id="termIn" autocomplete="off" spellcheck="false" aria-label="Terminal input"/></div>`, "");
+  w.classList.add("term");
+  const out = w.querySelector("#termOut");
+  const inp = w.querySelector("#termIn");
+  print(out, `DOLLHOUSE OS terminal — type <span class="hi">help</span>\n`);
+  inp.focus();
+  w.addEventListener("click", ()=> inp.focus());
+  inp.addEventListener("keydown", e=>{
+    if(e.key!=="Enter") return;
+    const cmd = inp.value.trim(); inp.value="";
+    print(out, `\n<span class="ok">$</span> ${escapeHtml(cmd)}\n`);
+    print(out, runCmd(cmd)+"\n");
+    w.querySelector(".win-body").scrollTop = 99999;
+  });
+}
+function print(el, html){ el.innerHTML += html; }
+function escapeHtml(s){ return s.replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function runCmd(raw){
+  const [cmd, ...args] = raw.toLowerCase().split(/\s+/);
+  switch(cmd){
+    case "": return "";
+    case "help": return `rooms          list every room
+open <room>    walk into a room
+whoami         who lives here
+projects       what's cooking
+skills         what's on the vanity
+contact        how to reach me
+wardrobe       change my outfit
+resume         grab the pdf
+clear          wipe the screen
+sudo           don't`;
+    case "rooms": return ROOMS.map(r=>`${r.id.padEnd(10)} ${r.app}`).join("\n");
+    case "open": {
+      const r = ROOMS.find(r=>r.id===args[0]);
+      if(!r) return `no room called "${escapeHtml(args[0]||"")}". try <span class="hi">rooms</span>`;
+      openRoom(r.id); return `opening ${r.name.toLowerCase()}…`;
+    }
+    case "whoami": return `${ME.name} — ${ME.tagline}`;
+    case "projects": return PROJECTS.map(p=>`<span class="hi">${p.title}</span> (${p.year})\n  ${p.desc}`).join("\n\n");
+    case "skills": return SKILLS.map(g=>`<span class="hi">${g.group}</span>\n  ${g.items.join(", ")}`).join("\n");
+    case "wardrobe": openWardrobe(); return "opening the wardrobe…";
+    case "contact": return CONTACT.map(c=>`${c.label.padEnd(10)} ${c.value}`).join("\n");
+    case "resume": window.open(RESUME_URL,"_blank"); return "opening resume…";
+    case "clear": document.getElementById("termOut").innerHTML=""; return "";
+    case "sudo": return "nice try. this is a dollhouse, not a server.";
+    case "ls": return ROOMS.map(r=>r.id+"/").join("  ");
+    case "date": return new Date().toString();
+    default: return `command not found: ${escapeHtml(cmd)} — try <span class="hi">help</span>`;
+  }
+}
+
+/* ============================================================
+   6. TASKBAR + LAUNCHER + CLOCK
+   ============================================================ */
+function buildLauncher(){
+  const ul = document.getElementById("launchList");
+  ul.innerHTML = "";
+  ROOMS.forEach(r=>{
+    const li = document.createElement("li");
+    li.innerHTML = `<button>
+      <span class="sw" style="background:${r.color}"></span>
+      <span><b>${r.app}</b><em>${r.name.toLowerCase()}</em></span></button>`;
+    li.querySelector("button").onclick = ()=>{ openRoom(r.id); toggleLauncher(false); };
+    ul.appendChild(li);
+  });
+
+  const wd = document.createElement("li");
+  wd.innerHTML = `<button><span class="sw" style="background:#E03D86"></span>
+    <span><b>Wardrobe</b><em>change my outfit</em></span></button>`;
+  wd.querySelector("button").onclick = ()=>{ openWardrobe(); toggleLauncher(false); };
+  ul.appendChild(wd);
+
+  const li = document.createElement("li");
+  li.innerHTML = `<button><span class="sw" style="background:#3B1E35"></span>
+    <span><b>Terminal</b><em>for the impatient</em></span></button>`;
+  li.querySelector("button").onclick = ()=>{ openTerminal(); toggleLauncher(false); };
+  ul.appendChild(li);
+}
+function toggleLauncher(force){
+  const l = document.getElementById("launcher");
+  const on = force !== undefined ? force : !l.classList.contains("on");
+  l.classList.toggle("on", on);
+  document.getElementById("rooms-btn").setAttribute("aria-expanded", on);
+}
+function tickClock(){
+  const d = new Date();
+  document.getElementById("clock").innerHTML =
+    `${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}
+     <small>${d.toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short"})}</small>`;
+}
+
+/* ============================================================
+   7. BOOT SEQUENCE
+   ============================================================ */
+const BOOT_LINES = [
+  ["counting rooms", "8 found"],
+  ["dusting furniture", "ok"],
+  ["hanging the dresses", "ok"],
+  ["waking the resident", "ok"],
+  ["putting the kettle on", "ok"],
+];
+function boot(){
+  const log = document.getElementById("bootLog");
+  const bar = document.getElementById("bootBar");
+  let i = 0;
+  const step = ()=>{
+    if(i < BOOT_LINES.length){
+      const [a,b] = BOOT_LINES[i];
+      log.innerHTML += `${a}${".".repeat(Math.max(2, 26-a.length))}<b>${b}</b><br>`;
+      bar.style.width = Math.round(((i+1)/BOOT_LINES.length)*100)+"%";
+      i++; setTimeout(step, 340);
+    } else {
+      document.getElementById("doorbell").classList.add("on");
+      document.getElementById("enterBtn").focus();
+    }
+  };
+  setTimeout(step, 380);
+}
+function stroll(){
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const doll = document.getElementById("doll");
+  const move = ()=>{
+    const w = document.getElementById("desk").getBoundingClientRect().width;
+    const max = Math.max(0, w - 360);
+    doll.style.transform = `translateX(-${Math.round(Math.random()*max)}px)`;
+  };
+  setTimeout(move, 7000);
+  setInterval(move, 17000);
+}
+function enterHouse(){
+  document.getElementById("boot").classList.add("gone");
+  document.getElementById("os").classList.add("on");
+  setTimeout(()=> say(`Welcome in! I'm ${ME.name}. Click any room and I'll show you around.`, 6500), 400);
+  setInterval(()=>{
+    if(Math.random() < .4) say(IDLE_LINES[Math.floor(Math.random()*IDLE_LINES.length)]);
+  }, 26000);
+}
+
+/* ============================================================
+   8. GO
+   ============================================================ */
+drawHouse();
+loadLook();
+drawDoll();
+buildLauncher();
+tickClock(); setInterval(tickClock, 20000);
+boot();
+
+document.getElementById("enterBtn").onclick = enterHouse;
+document.addEventListener("keydown", e=>{
+  if(e.key==="Enter" && !document.getElementById("boot").classList.contains("gone")) enterHouse();
+  if(e.key==="Escape"){ toggleLauncher(false); }
+});
+document.getElementById("rooms-btn").onclick = e => { e.stopPropagation(); toggleLauncher(); };
+document.addEventListener("click", e=>{
+  if(!e.target.closest("#launcher") && !e.target.closest("#rooms-btn")) toggleLauncher(false);
+});
+const sprite = document.getElementById("dollSprite");
+sprite.addEventListener("click", openWardrobe);
+sprite.addEventListener("keydown", e=>{
+  if(e.key==="Enter"||e.key===" "){ e.preventDefault(); sprite.click(); }
+});
+</script>
+</body>
+</html>
